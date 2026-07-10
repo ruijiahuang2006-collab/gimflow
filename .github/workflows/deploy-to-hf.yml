@@ -29,6 +29,13 @@ jobs:
             --exclude='_fixed_public_files_v2' \
             --exclude='__pycache__' \
             --exclude='.env' \
+            --exclude='demo_audio' \
+            --exclude='figures' \
+            --exclude='*.mp3' \
+            --exclude='*.png' \
+            --exclude='*.jpg' \
+            --exclude='*.jpeg' \
+            --exclude='*.webp' \
             ./ hf_space/
 
           cd hf_space
