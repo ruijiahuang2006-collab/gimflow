@@ -1,4 +1,4 @@
-﻿name: Deploy to Hugging Face Space
+name: Deploy to Hugging Face Space
 
 on:
   workflow_dispatch:
@@ -31,27 +31,26 @@ jobs:
             --exclude='.env' \
             ./ hf_space/
 
-          python - <<'PY'
-from pathlib import Path
+          cd hf_space
 
-p = Path("hf_space/README.md")
-text = p.read_text(encoding="utf-8") if p.exists() else ""
+          if [ -f README.md ]; then
+            cp README.md README_body.md
+          else
+            touch README_body.md
+          fi
 
-header = """---
-title: Kimusic Demo
-emoji: 🎵
-colorFrom: blue
-colorTo: indigo
-sdk: gradio
-app_file: app.py
-pinned: false
----
-
-"""
-
-if not text.lstrip().startswith("---"):
-    p.write_text(header + text, encoding="utf-8")
-PY
+          printf '%s\n' '---' > README.md
+          printf '%s\n' 'title: Kimusic Demo' >> README.md
+          printf '%s\n' 'emoji: 🎵' >> README.md
+          printf '%s\n' 'colorFrom: blue' >> README.md
+          printf '%s\n' 'colorTo: indigo' >> README.md
+          printf '%s\n' 'sdk: gradio' >> README.md
+          printf '%s\n' 'app_file: app.py' >> README.md
+          printf '%s\n' 'pinned: false' >> README.md
+          printf '%s\n' '---' >> README.md
+          printf '\n' >> README.md
+          cat README_body.md >> README.md
+          rm README_body.md
 
       - name: Push to Hugging Face Space
         shell: bash
