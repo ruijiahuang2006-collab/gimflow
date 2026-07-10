@@ -2,14 +2,12 @@ from __future__ import annotations
 import os
 import copy
 import gradio as gr
-from demo_security import make_security_middleware
 from dotenv import load_dotenv
 import http.client
 import json
 import re
 import random
 import uuid
-from urllib.parse import urlparse
 import prompts  # 动态读取当前语言与分类提示词
 from typing import Any, List
 from music_db import MusicDatabase
@@ -71,20 +69,6 @@ except Exception as _e:
 
 # Load environment variables
 load_dotenv()
-
-
-def make_llm_connection(timeout=None):
-    """Create a connection to an OpenAI-compatible chat-completions endpoint."""
-    base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
-    parsed = urlparse(base_url)
-    scheme = parsed.scheme or "https"
-    host = parsed.netloc or parsed.path
-    base_path = parsed.path.rstrip("/")
-    api_path = f"{base_path}/chat/completions" if base_path else "/v1/chat/completions"
-    conn_cls = http.client.HTTPSConnection if scheme == "https" else http.client.HTTPConnection
-    if timeout is None:
-        return conn_cls(host), api_path
-    return conn_cls(host, timeout=timeout), api_path
 
 # 在文件顶部添加状态跟踪变量
 PREVIOUS_STATE = None
@@ -284,23 +268,6 @@ class GIMState:
     POSTLUDE = "postlude"
 
 
-SESSION_OVER_TOKEN = "<session_over>"
-SESSION_OVER_PROMPT_INSTRUCTION = (
-    "\n\nPOSTLUDE SESSION CONTROL:\n"
-    "Append the control token <session_over> on a separate final line ONLY IF "
-    "all conditions are satisfied: 1. The participant's experience has been "
-    "summarized. 2. The experience has been connected back to the participant's "
-    "original concerns or current life. 3. A clear closing / return-to-present "
-    "statement has been given. 4. NO further reflective question is asked. "
-    "If the assistant is still asking questions, inviting further exploration, "
-    "or continuing the conversation, DO NOT emit <session_over>. Do not explain "
-    "this token to the participant."
-)
-MUSIC_IMAGING_MIN_USER_TURNS = 2
-MUSIC_IMAGING_MAX_USER_TURNS = 4
-POSTLUDE_MAX_USER_TURNS = 3
-
-
 def is_session_chinese(session):
     return getattr(session, "language", "en") == "zh"
 
@@ -340,11 +307,11 @@ class GIMTherapySession:
         welcome_started_at = time.time()
         self.initialize_welcome_message()
         print(f"[startup] initialize_welcome_message completed in {time.time() - welcome_started_at:.3f}s")
-        self.api_key = os.getenv("OPENAI_API_KEY", "")
+        self.api_key = "sk-Fu4AZ3halGRDgYnDz9He2Q9DdivuRwT2wzwYfWbikab2aPvw"
         # 可以通过环境变量控制是否重建索
         music_db_started_at = time.time()
         print(f"[startup] MusicDatabase construction start use_elasticsearch={not startup_light}")
-        self.music_db = MusicDatabase("../toy_dataset/music_data_complete_with_valence_arousal.json", use_elasticsearch=not startup_light, rebuild_index=True) if not startup_light else None
+        self.music_db = MusicDatabase("toy_dataset/music_data_complete.json", use_elasticsearch=not startup_light, rebuild_index=REBUILD_MUSIC_INDEX) if not startup_light else None
         if startup_light:
             print("[startup] MusicDatabase deferred (lazy)")
         else:
@@ -373,7 +340,7 @@ class GIMTherapySession:
         self.audio_agent = GIMAudioAgent(
             music_db=self.music_db,
             api_key=self.api_key,
-            music_root="../toy_dataset/mp3",  ##todo：全句music root和output dir
+            music_root="toy_dataset/mp3",  ##todo：全句music root和output dir
             output_dir="output"
         ) if not startup_light else None
         if startup_light:
@@ -412,12 +379,6 @@ class GIMTherapySession:
             "final_assessment_intro": False
         }
         self.postlude_reflection_prompt_index = None
-        self.phase_user_turns = {
-            GIMState.PRELUDE: 0,
-            GIMState.INDUCTION: 0,
-            GIMState.MUSIC_IMAGING: 0,
-            GIMState.POSTLUDE: 0,
-        }
         print(f"[startup] GIMTherapySession.__init__ completed in {time.time() - init_started_at:.3f}s")
 
     def render_kimusic_track_once(self, proxy_track, fallback_audio_path):
@@ -443,14 +404,11 @@ class GIMTherapySession:
             proxy_track["full_path"] = audio_file_full_path
             proxy_track["filename"] = os.path.basename(audio_file_full_path)
         else:
+            generated_music["audio_file"] = None
             generated_music["render_error"] = self.kimusic_render_result.get("error")
             proxy_track["file_path"] = fallback_audio_path
             proxy_track["full_path"] = os.path.abspath(fallback_audio_path) if fallback_audio_path else None
             proxy_track["filename"] = os.path.basename(fallback_audio_path) if fallback_audio_path else None
-            if fallback_audio_path and os.path.exists(fallback_audio_path):
-                generated_music["audio_file"] = os.path.relpath(os.path.abspath(fallback_audio_path)).replace(os.sep, "/")
-            else:
-                generated_music["audio_file"] = None
 
         return self.kimusic_render_result
 
@@ -459,9 +417,9 @@ class GIMTherapySession:
             music_db_started_at = time.time()
             print(f"[startup] MusicDatabase construction start use_elasticsearch={not self.startup_light}")
             self.music_db = MusicDatabase(
-                "../toy_dataset/music_data_complete_with_valence_arousal.json",
+                "toy_dataset/music_data_complete.json",
                 use_elasticsearch=not self.startup_light,
-                rebuild_index=True
+                rebuild_index=REBUILD_MUSIC_INDEX
             )
             print(f"[startup] MusicDatabase construction completed in {time.time() - music_db_started_at:.3f}s")
         return self.music_db
@@ -484,7 +442,7 @@ class GIMTherapySession:
             self.audio_agent = GIMAudioAgent(
                 music_db=self.ensure_music_db(),
                 api_key=self.api_key,
-                music_root="../toy_dataset/mp3",
+                music_root="toy_dataset/mp3",
                 output_dir="output"
             )
             print(f"[startup] GIMAudioAgent construction completed in {time.time() - audio_agent_started_at:.3f}s")
@@ -555,7 +513,7 @@ class GIMTherapySession:
             }
         ]
 
-        conn, api_path = make_llm_connection()
+        conn = http.client.HTTPSConnection("kudexapi.com")
         payload = json.dumps({
             "model": MODEL_NAME,
             "max_tokens": 120,
@@ -568,7 +526,7 @@ class GIMTherapySession:
         }
 
         try:
-            conn.request("POST", api_path, payload, headers)
+            conn.request("POST", "/v1/chat/completions", payload, headers)
             response = conn.getresponse()
             response_data = json.loads(response.read().decode("utf-8"))
 
@@ -627,42 +585,6 @@ class GIMTherapySession:
         log_message(self.session_data, role, normalized_content, phase or self.get_logging_phase())
         return message
 
-    def strip_session_over_token(self, text: str):
-        if not isinstance(text, str):
-            return text
-        return text.replace(SESSION_OVER_TOKEN, "").strip()
-
-    def response_still_invites_continuation(self, text: str):
-        if not isinstance(text, str):
-            return False
-        normalized = text.lower()
-        continuation_markers = [
-            "?",
-            "？",
-            "什么感觉",
-            "有什么变化",
-            "你注意到",
-            "你愿意",
-            "你可以慢慢感受",
-            "浠€涔堟劅瑙",
-            "鏈変粈涔堝彉鍖",
-            "浣犳敞鎰忓埌",
-            "浣犳効鎰",
-            "浣犲彲浠ユ參鎱㈡劅鍙",
-            "what do you notice",
-            "how does it feel",
-            "what happens",
-            "would you like",
-        ]
-        return any(marker in normalized for marker in continuation_markers)
-
-    def mark_ready_for_post_session_assessment(self):
-        self.session_completed = True
-        self.sam_state["pending_phase"] = "post_session"
-        self.panas_state["pending_phase"] = None
-        self.panas_state["current_order"] = []
-        self.panas_state["current_order_phase"] = None
-
     def append_music_tracks_to_session_data(self):
         import hyper_parameters
 
@@ -688,8 +610,7 @@ class GIMTherapySession:
                     waypoint_va=waypoint_va,
                     session_id=self.session_data.get("session_id"),
                     track_index=idx - 1,
-                    fallback_audio_path=fallback_audio_path,
-                    waypoint_sequence=waypoint_sequence
+                    fallback_audio_path=fallback_audio_path
                 )
                 proxy_track["duration_seconds"] = track.get("duration_seconds")
                 track = {**track, **proxy_track}
@@ -897,10 +818,7 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
         memory_prompt = self.memory.get_memory_for_prompt(self.current_state)
             
         # Use the prompt builder to get the full system prompt
-        system_prompt = get_full_system_prompt(self.current_state, memory_prompt)
-        if self.current_state == GIMState.POSTLUDE:
-            system_prompt += SESSION_OVER_PROMPT_INSTRUCTION
-        return system_prompt
+        return get_full_system_prompt(self.current_state, memory_prompt)
 
     def get_music_recommendation_prompts(self):
         """
@@ -989,7 +907,7 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
         )
         
         # 发送分类请求
-        conn, api_path = make_llm_connection()
+        conn = http.client.HTTPSConnection("kudexapi.com")
         payload = json.dumps({
             "model": MODEL_NAME,
             "max_tokens": 32,  # 极轻量
@@ -1002,7 +920,7 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
         }
         
         # 发送API请求
-        conn.request("POST", api_path, payload, headers)
+        conn.request("POST", "/v1/chat/completions", payload, headers)
         response = conn.getresponse()
         
         try:
@@ -1081,26 +999,6 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
         predicted_state = self.classify_state(user_message)
         if old_state == GIMState.PRELUDE and not self.has_llm_estimated_va():
             self.extract_va_from_prelude(user_message)
-
-        # 记录当前 phase 的用户轮数：这是 hard cap，只限制最大轮次，不阻止 LLM 提前进入下一阶段
-        if not hasattr(self, "phase_user_turns"):
-            self.phase_user_turns = {
-                GIMState.PRELUDE: 0,
-                GIMState.INDUCTION: 0,
-                GIMState.MUSIC_IMAGING: 0,
-                GIMState.POSTLUDE: 0,
-            }
-
-        self.phase_user_turns[old_state] = self.phase_user_turns.get(old_state, 0) + 1
-
-        # 最大轮数保险：如果 LLM 一直停留在 music_imaging，第 4 个用户回复后强制进入 postlude
-        music_imaging_turns = self.phase_user_turns.get(GIMState.MUSIC_IMAGING, 0)
-        if old_state == GIMState.MUSIC_IMAGING and music_imaging_turns < MUSIC_IMAGING_MIN_USER_TURNS:
-            print("Music imaging minimum exploration not reached; staying in music_imaging.")
-            predicted_state = GIMState.MUSIC_IMAGING
-        elif old_state == GIMState.MUSIC_IMAGING and music_imaging_turns >= MUSIC_IMAGING_MAX_USER_TURNS:
-            print("Music imaging turn limit reached; forcing transition to postlude.")
-            predicted_state = GIMState.POSTLUDE
         
         # 更新状态
         self.current_state = predicted_state
@@ -1220,7 +1118,7 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
                     criteria,
                     track_index=0,
                     used_track_ids=self.baseline_used_track_ids,
-                    music_root="../toy_dataset/mp3",
+                    music_root="toy_dataset/mp3",
                 )
                 self.baseline_used_track_ids.add(baseline_track.get("track_id"))
                 self.selected_music_tracks = [baseline_track]
@@ -1267,8 +1165,7 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
                     waypoint_va=waypoint_va,
                     session_id=self.session_data.get("session_id"),
                     track_index=0,
-                    fallback_audio_path=output_file,
-                    waypoint_sequence=waypoint_sequence
+                    fallback_audio_path=output_file
                 )
                 proxy_track["duration_seconds"] = self.gim_program_result['output']['total_seconds']
                 self.render_kimusic_track_once(proxy_track, output_file)
@@ -1344,7 +1241,7 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
         print("########################################################")
         
         # 准备API请求
-        conn, api_path = make_llm_connection()
+        conn = http.client.HTTPSConnection("kudexapi.com")
         payload = json.dumps({
             "model": MODEL_NAME,
             "max_tokens": MAX_TOKENS_RESPONSE,
@@ -1356,7 +1253,7 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
         }
         
         # 发送API请求
-        conn.request("POST", api_path, payload, headers)
+        conn.request("POST", "/v1/chat/completions", payload, headers)
         response = conn.getresponse()
         try:
             response_data = json.loads(response.read().decode("utf-8"))
@@ -1443,15 +1340,12 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
         
         # 发送流式API请求
         try:
-            conn, api_path = make_llm_connection(timeout=None)
-            conn.request("POST", api_path, payload, headers)
+            conn = http.client.HTTPSConnection("kudexapi.com", timeout=None)
+            conn.request("POST", "/v1/chat/completions", payload, headers)
             response = conn.getresponse()
             
             if response.status == 200:
                 full_response = ""
-                pending_visible_text = ""
-                token_detected = False
-                token_tail_length = max(0, len(SESSION_OVER_TOKEN) - 1)
                 for line in response:
                     line = line.decode('utf-8').strip()
                     if line.startswith('data: '):
@@ -1465,43 +1359,14 @@ Feel free to share whatever comes to your mind. Would you like to intriduce your
                                 if 'content' in delta:
                                     content = delta['content']
                                     full_response += content
-                                    if token_detected:
-                                        visible_text = content.replace(SESSION_OVER_TOKEN, "")
-                                        if visible_text:
-                                            yield visible_text
-                                        continue
-                                    pending_visible_text += content
-                                    if SESSION_OVER_TOKEN in pending_visible_text:
-                                        visible_text, _, after_token_text = pending_visible_text.partition(SESSION_OVER_TOKEN)
-                                        if visible_text:
-                                            yield visible_text
-                                        if after_token_text:
-                                            yield after_token_text
-                                        pending_visible_text = ""
-                                        token_detected = True
-                                        continue
-                                    if len(pending_visible_text) > token_tail_length:
-                                        visible_text = pending_visible_text[:-token_tail_length]
-                                        pending_visible_text = pending_visible_text[-token_tail_length:]
-                                        if visible_text:
-                                            yield visible_text
+                                    yield content
                         except json.JSONDecodeError:
                             continue
-                if not token_detected and pending_visible_text:
-                    yield pending_visible_text
                 
                 # 保存完整响应
-                cleaned_response = self.strip_session_over_token(full_response)
-                self.last_assistant_message = cleaned_response
-                if cleaned_response.strip():
-                    self.append_chat_message("assistant", cleaned_response)
-                should_end_from_token = token_detected and not self.response_still_invites_continuation(cleaned_response)
-                should_end_from_cap = (
-                    self.current_state == GIMState.POSTLUDE
-                    and self.phase_user_turns.get(GIMState.POSTLUDE, 0) >= POSTLUDE_MAX_USER_TURNS
-                )
-                if should_end_from_token or should_end_from_cap:
-                    self.mark_ready_for_post_session_assessment()
+                self.last_assistant_message = full_response
+                if full_response.strip():
+                    self.append_chat_message("assistant", full_response)
                 
             else:
                 error_text = f"API请求失败: {response.status}"
@@ -1591,7 +1456,7 @@ def get_music_tracks(session: GIMTherapySession):
                     music_titles.append(title)
                 else:
                     # Check if file exists in the correct music directory
-                    file_path = os.path.join("..", "toy_dataset", "mp3", filename)
+                    file_path = os.path.join("toy_dataset", "mp3", filename) ##todo: 作为参数传入
                     print(f"Looking for music file: {file_path}")
                     
                     if os.path.exists(file_path) and os.path.isfile(file_path):
@@ -1656,68 +1521,6 @@ def export_session_results(session: GIMTherapySession):
 with gr.Blocks(
     title="GIM Therapy Session",
     theme=gr.themes.Soft(),
-    js="""() => {
-        if (window.__gimExitWarningInstalled) {
-            return;
-        }
-        window.__gimExitWarningInstalled = true;
-        window.__gimExperimentComplete = false;
-        window.__gimMusicPlaying = false;
-        const getSelectedLanguage = () => {
-            const checked = Array.from(document.querySelectorAll('input[type="radio"]:checked'))
-                .map((input) => input.value || input.getAttribute("aria-label") || input.parentElement?.innerText || "")
-                .join(" ");
-            return checked.includes("English") ? "en" : "zh";
-        };
-        const getExitWarning = () => (
-            getSelectedLanguage() === "en"
-                ? "The experiment is not complete yet.\\nAre you sure you want to leave?\\nUnsaved data may be lost."
-                : "实验尚未完成，确定要退出吗？\\n未完成的数据可能无法保存。"
-        );
-        const setChatLocked = (locked) => {
-            const chatInput = document.querySelector("#gim-chat-input textarea");
-            const submitButton = document.querySelector("#gim-submit-btn button");
-            [chatInput, submitButton].forEach((element) => {
-                if (!element) {
-                    return;
-                }
-                element.disabled = locked;
-                element.style.pointerEvents = locked ? "none" : "";
-                element.style.opacity = locked ? "0.45" : "";
-            });
-        };
-        const wireAudio = () => {
-            document.querySelectorAll("audio").forEach((audio) => {
-                if (audio.dataset.gimPlaybackWired) {
-                    return;
-                }
-                audio.dataset.gimPlaybackWired = "1";
-                audio.addEventListener("play", () => {
-                    window.__gimMusicPlaying = true;
-                    setChatLocked(true);
-                });
-                audio.addEventListener("ended", () => {
-                    window.__gimMusicPlaying = false;
-                    setChatLocked(false);
-                });
-            });
-        };
-        const observer = new MutationObserver(() => wireAudio());
-        observer.observe(document.body, { childList: true, subtree: true });
-        wireAudio();
-        window.addEventListener("beforeunload", (event) => {
-            if (document.querySelector(".final-completion-card")) {
-                window.__gimExperimentComplete = true;
-            }
-            if (window.__gimExperimentComplete) {
-                return;
-            }
-            const warning = getExitWarning();
-            event.preventDefault();
-            event.returnValue = warning;
-            return warning;
-        });
-    }""",
     css="""
         .left-drawer {
             transition: all 0.3s ease-in-out;
@@ -1755,40 +1558,6 @@ with gr.Blocks(
             margin: 8px 0;
             border-left: 4px solid #28a745;
         }
-        .final-completion-card {
-            padding: 24px;
-            border: 1px solid #d0d7de;
-            border-radius: 6px;
-            background: #ffffff;
-            color: #1f2328;
-            line-height: 1.55;
-        }
-        .final-completion-card h2,
-        .final-completion-card p {
-            color: #1f2328;
-        }
-        .gradio-container .loading,
-        .gradio-container .generating,
-        .gradio-container .wrap.default,
-        .gradio-container .wrap.pending {
-            color: #1f2328 !important;
-        }
-        @media (max-width: 640px) {
-            .final-completion-card {
-                background: #ffffff;
-                color: #111827;
-                border-color: #c9d1d9;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            }
-            .gradio-container .loading,
-            .gradio-container .generating,
-            .gradio-container .wrap.default,
-            .gradio-container .wrap.pending {
-                background: rgba(255,255,255,0.96) !important;
-                color: #111827 !important;
-                border-radius: 8px;
-            }
-        }
     """
 ) as demo:
     # 会话状态管理
@@ -1817,36 +1586,24 @@ with gr.Blocks(
 
 Welcome and thank you for participating in this study!
 
-Please follow the steps below to complete the experiment:
+Please follow the steps below:
 
-1. Record the automatically generated **Participant ID**.
+1. Record your Participant ID.
 2. Complete the background questionnaire provided by the researcher (enter your Participant ID in the questionnaire).
-3. Return to this page and click **Start Session**.
-4. Follow the on-screen instructions to complete the pre-session questionnaires, therapeutic conversation, music experience, and post-music discussion.
-5. After the chatbot completes the session, the system will **automatically** proceed to the post-session questionnaires.
-6. After Session 1, please take a **5-minute break** as instructed by the system.
-7. When the countdown finishes, click **Start Session 2** to begin the second session.
+3. Return to this page and click "Start Session".
+4. Follow the on-screen instructions to complete the pre-session questionnaires, conversation, music experience, and post-music discussion.
+5. When the chatbot indicates that the session has ended, click "End Conversation" and complete the post-session questionnaires.
+6. After Session 1, please take a 5-minute break.
+7. When the countdown ends, click "Start Second Session" to begin Session 2.
 8. Session 2 follows the same procedure as Session 1.
-9. After completing all questionnaires, the page will display **"Experiment Completed"**, indicating that the study has finished.
+9. The experiment is complete when the page displays "Experiment Completed".
 
----
+Notes:
 
-## Notes
-
-- We recommend wearing headphones for the best experience.
-- We recommend using a desktop or laptop computer with **Google Chrome** or **Microsoft Edge**.
-- Please keep your internet connection stable. Do **not** refresh the page, close the browser window, or navigate away from the page during the experiment.
-- Please keep your **Participant ID** in a safe place, as it is required for the background questionnaire.
-- Music generation or loading may take several seconds. Please be patient. If necessary, you may click **Program** to check the generation progress.
-- After the music finishes, the system will continue with a brief conversation. Please continue following the chatbot's guidance.
-- When the system automatically proceeds to the post-session questionnaires, simply complete them as instructed. **There is no need to click "End Conversation."**
-- During the experiment, you will mainly use the following buttons:
-  - **Start Session**
-  - **Submit Questionnaire**
-  - **Send**
-  - **Play Music**
-  - **Start Session 2**
-- There are no right or wrong answers. Please respond according to your genuine thoughts and feelings.
+• Headphones are recommended.
+• Please do not refresh the page or close the browser.
+• Please keep your Participant ID for Session 2.
+• Other than "Start Session", "Send", questionnaire submission buttons, and "End Conversation", no other buttons need to be used.
 """)
         study_instructions_zh = gr.Markdown("""# 实验说明
 
@@ -1854,27 +1611,22 @@ Please follow the steps below to complete the experiment:
 
 请按照以下步骤完成实验：
 
-1. 记录系统自动生成的 Participant ID。
+1. 记录您的 Participant ID。
 2. 完成研究人员提供的背景问卷（填写 Participant ID）。
 3. 返回本页面，点击【开始会话】。
-4. 根据页面提示完成会前量表、治疗对话、音乐体验以及音乐结束后的交流环节。
-5. 当聊天机器人完成本次会话后，系统将自动进入会后量表。
-6. 第一轮结束后，请按照系统提示休息 5 分钟。
+4. 根据页面提示完成会前量表、对话、音乐体验以及音乐结束后的交流环节。
+5. 当聊天机器人提示本次会话结束后，点击【结束对话】并完成会后量表。
+6. 第一轮结束后，请休息 5 分钟。
 7. 倒计时结束后，点击【开始第二次会话】完成第二轮体验。
 8. 第二轮流程与第一轮相同。
-9. 完成所有量表后，页面显示“实验完成”即表示实验结束。
+9. 完成所有量表后，页面显示“实验完成”即表示结束。
 
-注意事项
+注意：
 
-- 建议佩戴耳机完成实验。
-- 建议使用电脑端（Chrome 或 Edge 浏览器）。
-- 实验过程中请保持网络稳定，不要刷新页面、关闭浏览器或返回上一页。
-- 请妥善保存 Participant ID，以便完成背景问卷。
-- 音乐生成或加载可能需要几十秒，请耐心等待。如等待时间较长，可点击【程序】查看生成进度。
-- 音乐播放结束后，系统仍会继续进行一段交流，请根据提示继续完成整个会话。
-- 当系统自动进入会后量表时，请直接完成量表填写，无需手动点击【结束对话】。
-- 除【开始会话】【提交量表】【发送】【音乐播放】【开始第二次会话】外，其余按钮一般无需使用。
-- 所有问题均无标准答案，请根据自己的真实感受作答。
+• 建议佩戴耳机。
+• 请勿刷新页面或关闭浏览器。
+• 请保存好 Participant ID。
+• 除【开始会话】【发送】【提交量表】【结束对话】外，其余按钮无需使用。
 """, visible=False)
         
         # 语言切换开关
@@ -1997,15 +1749,14 @@ Please follow the steps below to complete the experiment:
             msg_input = gr.Textbox(
                 label="Share your thoughts...",
                 placeholder="Type your message here...",
-                container=True,
-                elem_id="gim-chat-input"
+                container=True
             )
             
             # 按钮行
             with gr.Row():
                 toggle_memory_btn = gr.Button("👤 Memory", scale=0)
-                submit_btn = gr.Button("Send", variant="primary", elem_id="gim-submit-btn")
-                finish_session_btn = gr.Button("Finish Session", variant="secondary", interactive=False)
+                submit_btn = gr.Button("Send", variant="primary")
+                finish_session_btn = gr.Button("Finish Session", variant="secondary")
                 toggle_program_btn = gr.Button("🎵 Program", scale=0)
             
             with gr.Row():
@@ -2071,7 +1822,7 @@ Please follow the steps below to complete the experiment:
         is_chinese = is_session_chinese(session)
         texts = get_ui_texts(is_chinese)
         return f"""
-<div class="final-completion-card">
+<div style="padding:24px;border:1px solid #ddd;border-radius:6px;background:#fafafa;">
   <h2>{texts["final_complete_title"]}</h2>
   <p>{texts["final_complete_body"]}</p>
 </div>
@@ -2204,25 +1955,15 @@ Please follow the steps below to complete the experiment:
             gr.update(visible=bool(ready), value=texts["submit"])
         )
 
-    def get_finish_session_button_update(session: GIMTherapySession):
-        return gr.update(interactive=bool(session and getattr(session, "session_completed", False)))
-
     def finish_session(session: GIMTherapySession):
         if not session:
             session = GIMTherapySession()
 
-        if not getattr(session, "session_completed", False):
-            return (
-                session.chat_history,
-                session,
-                *get_sam_ui_updates(session),
-                *get_panas_ui_updates(session),
-                *get_chat_input_updates(session),
-                *get_sus_ui_updates(session, reset_inputs=True),
-                *get_therapy_ui_updates(session, reset_inputs=True)
-            )
-
-        session.mark_ready_for_post_session_assessment()
+        session.session_completed = True
+        session.sam_state["pending_phase"] = "post_session"
+        session.panas_state["pending_phase"] = None
+        session.panas_state["current_order"] = []
+        session.panas_state["current_order_phase"] = None
 
         return (
             session.chat_history,
@@ -2692,12 +2433,7 @@ Please follow the steps below to complete the experiment:
         for chunk in session.get_next_response_stream(message):
             chunk_text = session._normalize_message_content(chunk)
             streamed_response += chunk_text
-            yield (
-                session.chat_history + [{"role": "assistant", "content": streamed_response}],
-                session,
-                get_finish_session_button_update(session)
-            )
-        yield session.chat_history, session, get_finish_session_button_update(session)
+            yield session.chat_history + [{"role": "assistant", "content": streamed_response}], session
 
     def generate_music_stream(session: GIMTherapySession):
         """在需要时，流式生成音乐并更新UI"""
@@ -2718,9 +2454,7 @@ Please follow the steps below to complete the experiment:
                 "Music generation not required.\n无需生成音乐。",
                 get_audio_player_update(session),
                 *get_sam_ui_updates(session),
-                *get_panas_ui_updates(session),
-                *get_chat_input_updates(session),
-                get_finish_session_button_update(session)
+                *get_panas_ui_updates(session)
             )
             return
 
@@ -2765,9 +2499,7 @@ Please follow the steps below to complete the experiment:
                 session.progress_status,
                 get_audio_player_update(session),
                 *get_sam_ui_updates(session),
-                *get_panas_ui_updates(session),
-                *get_chat_input_updates(session),
-                get_finish_session_button_update(session)
+                *get_panas_ui_updates(session)
             )
         
         # 任务完成
@@ -2803,9 +2535,7 @@ Please follow the steps below to complete the experiment:
             completed_message,
             get_audio_player_update(session),
             *get_sam_ui_updates(session),
-            *get_panas_ui_updates(session),
-            *get_chat_input_updates(session),
-            get_finish_session_button_update(session)
+            *get_panas_ui_updates(session)
         )
 
     # 初始化函数
@@ -2838,7 +2568,6 @@ Please follow the steps below to complete the experiment:
             *get_sam_ui_updates(session),
             *get_panas_ui_updates(session),
             *get_chat_input_updates(session),
-            get_finish_session_button_update(session),
             *get_sus_ui_updates(session, reset_inputs=True),
             *get_therapy_ui_updates(session, reset_inputs=True)
         )
@@ -2882,7 +2611,6 @@ Please follow the steps below to complete the experiment:
                 *get_sam_ui_updates(session, reset_sliders=True),
                 *get_panas_ui_updates(session, reset_inputs=True),
                 *get_chat_input_updates(session),
-                get_finish_session_button_update(session),
                 *get_sus_ui_updates(session, reset_inputs=True),
                 *get_therapy_ui_updates(session, reset_inputs=True)
             )
@@ -2923,7 +2651,6 @@ Please follow the steps below to complete the experiment:
             *get_sam_ui_updates(session, reset_sliders=True),
             *get_panas_ui_updates(session, reset_inputs=True),
             *get_chat_input_updates(session),
-            get_finish_session_button_update(session),
             *get_sus_ui_updates(session, reset_inputs=True),
             *get_therapy_ui_updates(session, reset_inputs=True)
         )
@@ -2995,7 +2722,6 @@ Please follow the steps below to complete the experiment:
             *get_sam_ui_updates(session, reset_sliders=True),
             *get_panas_ui_updates(session, reset_inputs=True),
             *get_chat_input_updates(session),
-            get_finish_session_button_update(session),
             *get_sus_ui_updates(session, reset_inputs=True),
             *get_therapy_ui_updates(session, reset_inputs=True)
         )
@@ -3071,7 +2797,7 @@ Please follow the steps below to complete the experiment:
             chat_input_update,  # msg_input
             gr.update(value=ui_text["memory"]),    # toggle_memory_btn
             submit_update,    # submit_btn
-            gr.update(value=new_texts["finish_session"], interactive=bool(getattr(session, "session_completed", False))),   # finish_session_btn
+            gr.update(value=new_texts["finish_session"]),   # finish_session_btn
             gr.update(value=ui_text["program"]),   # toggle_program_btn
             gr.update(value=ui_text["clear"]),     # clear_btn
             gr.update(value=ui_text["save"]),      # save_btn
@@ -3099,7 +2825,7 @@ Please follow the steps below to complete the experiment:
             chatbot, user_memory_display, program_info_display, audio_player,
             sam_panel, sam_title, sam_instruction, sam_valence, sam_arousal, sam_status,
             panas_panel, panas_title, *panas_item_components, panas_status,
-            msg_input, submit_btn, finish_session_btn,
+            msg_input, submit_btn,
             sus_panel, sus_title, *sus_item_components, sus_status,
             therapy_panel, therapy_title, *therapy_item_components, therapy_status
         ]
@@ -3114,7 +2840,7 @@ Please follow the steps below to complete the experiment:
             *([washout_timer] if washout_timer else []),
             sam_panel, sam_title, sam_instruction, sam_valence, sam_arousal, sam_status,
             panas_panel, panas_title, *panas_item_components, panas_status,
-            msg_input, submit_btn, finish_session_btn,
+            msg_input, submit_btn,
             sus_panel, sus_title, *sus_item_components, sus_status,
             therapy_panel, therapy_title, *therapy_item_components, therapy_status
         ]
@@ -3145,7 +2871,7 @@ Please follow the steps below to complete the experiment:
     submit_btn.click(
         process_dialogue_stream,
         [msg_input, session_state],
-        [chatbot, session_state, finish_session_btn]
+        [chatbot, session_state]
     ).then(
         lambda: "",
         None,
@@ -3156,9 +2882,7 @@ Please follow the steps below to complete the experiment:
         [
             chatbot, session_state, user_memory_display, program_info_display, progress_display, audio_player,
             sam_panel, sam_title, sam_instruction, sam_valence, sam_arousal, sam_status,
-            panas_panel, panas_title, *panas_item_components, panas_status,
-            msg_input, submit_btn,
-            finish_session_btn
+            panas_panel, panas_title, *panas_item_components, panas_status
         ]
     )
     
@@ -3166,7 +2890,7 @@ Please follow the steps below to complete the experiment:
     msg_input.submit(
         process_dialogue_stream,
         [msg_input, session_state],
-        [chatbot, session_state, finish_session_btn]
+        [chatbot, session_state]
     ).then(
         lambda: "",
         None,
@@ -3177,9 +2901,7 @@ Please follow the steps below to complete the experiment:
         [
             chatbot, session_state, user_memory_display, program_info_display, progress_display, audio_player,
             sam_panel, sam_title, sam_instruction, sam_valence, sam_arousal, sam_status,
-            panas_panel, panas_title, *panas_item_components, panas_status,
-            msg_input, submit_btn,
-            finish_session_btn
+            panas_panel, panas_title, *panas_item_components, panas_status
         ]
     )
     
@@ -3193,7 +2915,7 @@ Please follow the steps below to complete the experiment:
             *([washout_timer] if washout_timer else []),
             sam_panel, sam_title, sam_instruction, sam_valence, sam_arousal, sam_status,
             panas_panel, panas_title, *panas_item_components, panas_status,
-            msg_input, submit_btn, finish_session_btn,
+            msg_input, submit_btn,
             sus_panel, sus_title, *sus_item_components, sus_status,
             therapy_panel, therapy_title, *therapy_item_components, therapy_status
         ]
@@ -3299,36 +3021,19 @@ Please follow the steps below to complete the experiment:
 
 if __name__ == "__main__":
     try:
-        # Public demo deployment settings for Hugging Face Spaces.
-        # DEMO_PASSWORD enables Gradio password protection.
-        # DEMO_RATE_LIMIT_* controls lightweight IP-based rate limiting.
-        os.makedirs("output/kimusic_generated", exist_ok=True)
-
-        demo_username = os.getenv("DEMO_USERNAME", "reviewer")
-        demo_password = os.getenv("DEMO_PASSWORD", "")
-        demo_auth = (demo_username, demo_password) if demo_password else None
-
-        if hasattr(demo, "queue"):
-            demo.queue(
-                default_concurrency_limit=int(os.getenv("DEMO_CONCURRENCY_LIMIT", "1")),
-                max_size=int(os.getenv("DEMO_QUEUE_MAX_SIZE", "4")),
-            )
-
+        # 添加必要的参数以支持文件传输
         demo.launch(
-            server_name=os.getenv("GRADIO_SERVER_NAME", "0.0.0.0"),
-            server_port=int(os.getenv("PORT", os.getenv("GRADIO_SERVER_PORT", "7860"))),
-            auth=demo_auth,
-            auth_message="Kimusic EMNLP demo. Please use the reviewer password provided by the authors.",
-            show_error=False,
+            share=True,
+            server_name="0.0.0.0",  # Server/public launch
+            server_port=7860,       # Fixed port for deployment
+            show_error=True,        # 显示详细错误信息
             show_api=False,
-            quiet=False,
-            max_threads=int(os.getenv("DEMO_MAX_THREADS", "4")),
+            quiet=False,            # 显示详细日志
             allowed_paths=[
                 os.path.abspath("output"),
                 os.path.abspath("output/kimusic_generated"),
-                os.path.abspath("demo_audio")
-            ],
-            app_kwargs={"middleware": make_security_middleware()},
+                os.path.abspath("toy_dataset/mp3")
+            ]
         )
     except Exception as e:
         print(f"启动应用失败: {e}")
