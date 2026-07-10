@@ -1,0 +1,125 @@
+﻿{
+  "_note": "SYNTHETIC illustrative session for repository documentation. This file is NOT from any real participant, and all values including VA coordinates, questionnaire scores, and blueprint parameters are constructed for demonstration only. See the Ethics Statement of the paper for the actual data-handling protocol.",
+  "schema_version": "public_example_v1",
+  "participant_id": "EXAMPLE_SYNTHETIC_001",
+  "session_id": "example_kimusic_session_001",
+  "session_number": 1,
+  "condition": "kimusic",
+  "language": "en",
+  "duration_seconds": 90,
+  "pre_session": {
+    "SAM_valence": 4,
+    "SAM_arousal": 6,
+    "PANAS_PA": 22,
+    "PANAS_NA": 24
+  },
+  "llm_estimated_va": {
+    "valence": -0.25,
+    "arousal": 0.35,
+    "rationale": "[synthetic placeholder]"
+  },
+  "current_state_va": {
+    "valence": -0.25,
+    "arousal": 0.35
+  },
+  "target_state_va": {
+    "valence": 0.45,
+    "arousal": -0.10
+  },
+  "focus_theme": "moving from deadline-related tension toward steadier focus",
+  "waypoint_sequence": [
+    {
+      "section": 1,
+      "valence": -0.25,
+      "arousal": 0.35,
+      "intent": "acknowledge tension"
+    },
+    {
+      "section": 2,
+      "valence": -0.05,
+      "arousal": 0.20,
+      "intent": "create space"
+    },
+    {
+      "section": 3,
+      "valence": 0.20,
+      "arousal": 0.05,
+      "intent": "support grounding"
+    },
+    {
+      "section": 4,
+      "valence": 0.45,
+      "arousal": -0.10,
+      "intent": "settle into calm focus"
+    }
+  ],
+  "music_blueprint": {
+    "global_style": "gentle, reflective, low-intensity",
+    "structure": [
+      {
+        "section": 1,
+        "duration_seconds": 20,
+        "musical_role": "opening texture"
+      },
+      {
+        "section": 2,
+        "duration_seconds": 25,
+        "musical_role": "gradual harmonic brightening"
+      },
+      {
+        "section": 3,
+        "duration_seconds": 25,
+        "musical_role": "stable melodic grounding"
+      },
+      {
+        "section": 4,
+        "duration_seconds": 20,
+        "musical_role": "soft resolution"
+      }
+    ],
+    "instrument_roles": {
+      "piano": "main harmonic support",
+      "strings": "sustained background texture",
+      "pad": "ambient continuity"
+    }
+  },
+  "music_sequence": {
+    "generation_method": "kimusic_renderer",
+    "audio_file": "demo_audio/demo_session_audio.mp3",
+    "renderer": "procedural MIDI rendering with FluidSynth"
+  },
+  "conversation_log": [
+    {
+      "role": "assistant",
+      "phase": "prelude",
+      "content": "[synthetic opening message placeholder]"
+    },
+    {
+      "role": "user",
+      "phase": "prelude",
+      "content": "[synthetic user context placeholder]"
+    },
+    {
+      "role": "assistant",
+      "phase": "music_and_imaging",
+      "content": "[synthetic guided imagery placeholder]"
+    },
+    {
+      "role": "assistant",
+      "phase": "postlude",
+      "content": "[synthetic closing reflection placeholder]"
+    }
+  ],
+  "post_session": {
+    "SAM_valence": 6,
+    "SAM_arousal": 4,
+    "PANAS_PA": 27,
+    "PANAS_NA": 18
+  },
+  "post_experiment": {
+    "_note": "SUS and TX are collected once after both sessions complete.",
+    "SUS_score": 75,
+    "TX_items": [6, 6, 6, 5, 6, 6],
+    "TX_mean": 5.83
+  }
+}

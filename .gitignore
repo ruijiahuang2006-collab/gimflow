@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+Lib/
+Scripts/
+pyvenv.cfg
+site-packages/
+
+# Environment / secrets
+.env
+*.key
+*.pem
+
+# Local outputs
+output/
+logs/
+cache/
+.cache/
+runlog.txt
+client_memories.json
+
+# Raw study data
+session_results/
+data/session_results/
+data/raw_evaluations/
+data/study_raw/
+data/participants/
+data/demographics/*.xlsx
+data/demographics/*.xls
+ai_evaluation/datasets/
+ai_evaluation/results/
+ai_evaluation/archive_old_test_results/
+
+# Backups / local artifacts
+manual_backups/
+*_backup*.py
+app_before_*.py
+*.zip
+
+# Audio / copyright-sensitive large assets
+*.sf2
+*.wav
+baseline_music/
+toy_dataset/mp3/
+
+# Keep license text
+!soundfonts/*.txt
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store

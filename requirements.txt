@@ -1,0 +1,13 @@
+gradio==4.19.2
+python-dotenv==1.0.1
+anthropic==0.18.1
+requests==2.31.0
+beautifulsoup4==4.12.2
+tqdm==4.66.1
+selenium==4.16.0
+scikit-learn==1.2.2
+numpy==1.24.3
+librosa==0.10.1
+elasticsearch==8.11.0
+elasticsearch-dsl==8.11.0
+openai>=1.30,<2

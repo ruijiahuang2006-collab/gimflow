@@ -1,0 +1,11 @@
+measure,condition,N,mean_change,sd_change,cohen_d_paired,wilcoxon_p
+SAM_valence,baseline,23,+0.3043,2.4014,,
+SAM_valence,kimusic,23,+1.0000,1.4142,+0.2302,0.3456
+SAM_arousal,baseline,23,-0.2609,2.4720,,
+SAM_arousal,kimusic,23,+0.3478,2.1021,+0.2549,0.2505
+PANAS_PA,baseline,23,-0.6957,9.1921,,
+PANAS_PA,kimusic,23,+2.5217,5.3587,+0.3731,0.1777
+PANAS_NA,baseline,23,+0.2609,6.5866,,
+PANAS_NA,kimusic,23,-1.9565,4.6071,-0.2649,0.3784
+SUS_score,combined,22,73.2955,18.8254,,
+TX_mean,combined,22,5.8485,0.9285,,
