@@ -1,4 +1,6 @@
-# Appendix F: LLM Judge Prompt
+﻿# Appendix F: LLM Judge Prompt
+
+Note: This document reproduces the evaluator prompt used in the reported experiments. Some wording reflects the deployed evaluation terminology; the released system prompts use non-clinical wording, as described in the README and the paper.
 
 This document provides the prompt template used by the LLM judge in the blinded pairwise AI-evaluation protocol reported in Section 5.4 of the paper.
 
@@ -42,10 +44,10 @@ Affective outcomes:
 - Post SAM Arousal: {safe_value(get_nested(s, "post_emotion", "sam_arousal"))}/9
 - Post PANAS PA: {safe_value(get_nested(s, "post_emotion", "panas_pa"))}/50
 - Post PANAS NA: {safe_value(get_nested(s, "post_emotion", "panas_na"))}/50
-- ? SAM Valence: {safe_value(get_nested(s, "emotion_deltas", "delta_sam_valence"))}
-- ? SAM Arousal: {safe_value(get_nested(s, "emotion_deltas", "delta_sam_arousal"))}
-- ? PANAS PA: {safe_value(get_nested(s, "emotion_deltas", "delta_panas_pa"))}
-- ? PANAS NA: {safe_value(get_nested(s, "emotion_deltas", "delta_panas_na"))}
+- Delta SAM Valence: {safe_value(get_nested(s, "emotion_deltas", "delta_sam_valence"))}
+- Delta SAM Arousal: {safe_value(get_nested(s, "emotion_deltas", "delta_sam_arousal"))}
+- Delta PANAS PA: {safe_value(get_nested(s, "emotion_deltas", "delta_panas_pa"))}
+- Delta PANAS NA: {safe_value(get_nested(s, "emotion_deltas", "delta_panas_na"))}
 
 Music profile:
 {final_compact_text(s.get("music_profile"), 750)}
