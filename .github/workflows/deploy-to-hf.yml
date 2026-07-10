@@ -1,0 +1,70 @@
+﻿name: Deploy to Hugging Face Space
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout public release
+        uses: actions/checkout@v4
+
+      - name: Prepare Hugging Face Space files
+        shell: bash
+        run: |
+          set -e
+          rm -rf hf_space
+          mkdir hf_space
+
+          rsync -av \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='session_results' \
+            --exclude='output' \
+            --exclude='_fixed_public_files' \
+            --exclude='_fixed_public_files_v2' \
+            --exclude='__pycache__' \
+            --exclude='.env' \
+            ./ hf_space/
+
+          python - <<'PY'
+from pathlib import Path
+
+p = Path("hf_space/README.md")
+text = p.read_text(encoding="utf-8") if p.exists() else ""
+
+header = """---
+title: Kimusic Demo
+emoji: 🎵
+colorFrom: blue
+colorTo: indigo
+sdk: gradio
+app_file: app.py
+pinned: false
+---
+
+"""
+
+if not text.lstrip().startswith("---"):
+    p.write_text(header + text, encoding="utf-8")
+PY
+
+      - name: Push to Hugging Face Space
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -e
+          cd hf_space
+          git init
+          git config user.email "actions@github.com"
+          git config user.name "github-actions"
+          git add .
+          git commit -m "Deploy Kimusic demo"
+          git branch -M main
+          git remote add hf https://ritalala:${HF_TOKEN}@huggingface.co/spaces/ritalala/kimusic-demo
+          git push --force hf main
