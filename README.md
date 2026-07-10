@@ -155,3 +155,7 @@ The following files provide the main reviewer-facing artifacts referenced by the
 - Aggregate Study 1/2 results: data/aggregate_analysis/
 - Demo audio sample: demo_audio/demo_session_audio.mp3
 - High-resolution figures: figures/
+
+## Language Note
+
+This public release is intended for English-language demonstration, review, and reproducibility. Some legacy Chinese UI strings from the deployed study interface are not maintained in the public release code; the paper, README, documentation, demo transcript, prompts, and reviewer-facing artifacts are provided in English.
