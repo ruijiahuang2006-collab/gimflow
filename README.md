@@ -6,7 +6,7 @@
 
 **Kimusic** refers specifically to the blueprint-based music generation module and to the experimental Kimusic condition. The repository name and selected implementation identifiers retain `kimusic` for compatibility with the original module structure.
 
-**An LLM-Guided GIM-Inspired Music Agent**
+**An LLM-Guided Dialogue-to-Music System for GIM-Inspired Well-Being Experiences**
 
 *System Demonstration submission to EMNLP 2026*
 
@@ -30,14 +30,14 @@ The public code preserves the GIMFlow system implementation and the Kimusic musi
 ## Paper
 
 - **Paper (OpenReview)**: [TBD after submission]
-- **Live demo**: [TBD]
+- **Live demo**: https://gimflowdemo.com/
 
 ---
 
 ## Repository Structure
 
 ```
-kimusic/
+gimflow/
 ├── app.py
 ├── prompts.py                              # Released prompts with non-clinical wording
 ├── kimusic_renderer.py                     # Blueprint -> MIDI/audio renderer
@@ -125,7 +125,7 @@ Individual session data, raw questionnaire responses, and raw LLM-judge outputs 
 
 Aggregate results are provided in `data/aggregate_analysis/`, including means, standard deviations, paired effect sizes, and Wilcoxon signed-rank test results for Study 1 and Study 2.
 
-For the case study discussed in §5.5 of the paper, extended details are provided in the paper appendix. The repository includes `docs/case_study_note.md` to clarify the scope of released case-study materials and the privacy rationale for not releasing individual session-level logs.
+For the case study discussed in §5 of the paper, extended details are provided in the paper appendix. The repository includes `docs/case_study_note.md` to clarify the scope of released case-study materials and the privacy rationale for not releasing individual session-level logs.
 
 ---
 
