@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 import os
 import copy
 import gradio as gr
@@ -3318,7 +3318,7 @@ if __name__ == "__main__":
             server_name="0.0.0.0",
             server_port=int(os.getenv("PORT", "7860")),
             auth=demo_auth,
-            auth_message="Kimusic EMNLP demo. Please use the reviewer password provided by the authors.",
+            auth_message="GIMFlow EMNLP demo. Please use the reviewer password provided by the authors.",
             show_error=True,
             show_api=False,
             quiet=False,
