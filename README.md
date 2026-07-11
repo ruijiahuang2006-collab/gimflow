@@ -22,10 +22,9 @@ The public code preserves the GIMFlow system implementation and the Kimusic musi
 The study was conducted in Chinese: the deployed interface, dialogue
 prompts, and participant interactions were in Chinese. To support
 reproducibility, the released prompt templates (`prompts.py`) retain
-the original Chinese wording used in the study. The released example
-transcript is provided in English as a translated demonstration transcript.
-The workflow, VA planner, questionnaires, and logging are language-agnostic
-and can be run in other languages by substituting the prompt templates.
+the original Chinese wording used in the study. The workflow, VA planner,
+questionnaires, and logging are language-agnostic and can be run in other
+languages by substituting the prompt templates.
 
 ## Demo Materials
 
