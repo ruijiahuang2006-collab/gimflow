@@ -1,6 +1,6 @@
-﻿# Appendix D2: Kimusic Blueprint Construction Interface
+# Appendix D2: Kimusic Blueprint Construction Interface
 
-This document describes the public-release Kimusic blueprint construction interface used by the Kimusic condition.
+This document describes the public-release Kimusic blueprint construction interface used by the GIMFlow condition.
 
 In the released code, the Kimusic music blueprint is constructed from the target valence-arousal (VA) state and waypoint sequence through deterministic helper functions in `kimusic_client.py`, rather than being exposed as a standalone prompt template.
 

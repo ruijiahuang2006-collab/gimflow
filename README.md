@@ -2,17 +2,14 @@
 
 ## Naming
 
-**GIMFlow** refers to the overall interactive guided-imagery music system.
-
-**Kimusic** refers specifically to the blueprint-based music generation module and to the experimental Kimusic condition. The repository name and selected implementation identifiers retain `kimusic` for compatibility with the original module structure.
+**GIMFlow** refers to the overall interactive system and to its LLM-guided
+music-generation condition (compared against a retrieval Baseline).
+The name `kimusic` is retained only as a legacy internal module/file identifier
+(e.g., `kimusic_renderer.py`); it is not a condition name in the paper.
 
 **An LLM-Guided Dialogue-to-Music System for GIM-Inspired Well-Being Experiences**
 
 *System Demonstration submission to EMNLP 2026*
-
-GIMFlow is a non-clinical research demonstration that combines an LLM-guided dialogue workflow with symbolic music rendering. The system enacts a phase-scripted four-phase dialogue (Prelude, Induction, Music & Imaging, Postlude), estimates the user's current valence–arousal state, plans a target-directed four-waypoint trajectory, and delivers music via either blueprint-conditioned symbolic rendering (Kimusic condition) or metadata-based retrieval (Baseline condition).
-
----
 
 ## Public Release Scope
 
@@ -22,14 +19,13 @@ The public code preserves the GIMFlow system implementation and the Kimusic musi
 
 ## Demo Materials
 
-- **Video walkthrough** (2:16, YouTube unlisted): https://youtu.be/lompQnNoJlM
+- **Video walkthrough** (2:17, YouTube unlisted): https://youtu.be/xfeQDTup9pg
 - **Full demonstration transcript**: [`docs/example_session_transcript.md`](docs/example_session_transcript.md)
 - **Video recording guide**: [`docs/demo_video_recording_guide.md`](docs/demo_video_recording_guide.md)
 - **Demo audio**: [`demo_audio/`](demo_audio/)
 
 ## Paper
-
-- **Paper (OpenReview)**: [TBD after submission]
+- **Paper (OpenReview)**: https://openreview.net/forum?id=n5kZrC3N9U
 - **Live demo**: https://gimflowdemo.com/
 
 ---

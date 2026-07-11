@@ -1,6 +1,6 @@
-﻿### D. Prompt Templates
+### D. Prompt Templates
 
-The dialogue system uses purpose-specific prompt templates loaded from the `prompts` module. English versions are reproduced below; equivalent Chinese versions were used with Chinese-speaking participants. The final system prompt for each turn is constructed by concatenating the base system prompt, a phase-specific guidance block, and (when applicable) the music selection information template. The Kimusic blueprint construction interface and the LLM judge prompt used in §5.4 are provided in the released repository.
+The dialogue system uses purpose-specific prompt templates loaded from the `prompts` module. English versions are reproduced below; equivalent Chinese versions were used with Chinese-speaking participants. The final system prompt for each turn is constructed by concatenating the base system prompt, a phase-specific guidance block, and (when applicable) the music selection information template. The Kimusic blueprint construction interface and the LLM judge prompt used in §5 are provided in the released repository.
 
 *Note on prompt versions.* The prompts shown here are the public-release versions using non-clinical wording ("GIM-inspired well-being facilitator," "participant," "session process"). During the two user studies (§5.1, §5.3), an earlier deployed version used the terms "GIM therapist," "client," and "therapy process" in place of these non-clinical equivalents. The two versions differ only in terminology; the phase structure, dialogue logic, VA estimation call, and music module interfaces are identical. This terminology mismatch between deployment and release is also noted in §8 Limitations.
 
@@ -233,4 +233,4 @@ to listen to the music tracks that have just appeared in the interface.
 Guide them to listen to the music, and share what imagery or feelings arise.
 ```
 
-The Kimusic condition's blueprint construction interface, including the symbolic music blueprint schema with concept, structure, and per-section waypoint indices, is provided in docs/v5_appendix_D2_kimusic_blueprint_interface.md. The LLM judge prompt used in §5.4 is provided in docs/v5_appendix_F_llm_judge_prompt.md.
+The GIMFlow condition's blueprint construction interface, including the symbolic music blueprint schema with concept, structure, and per-section waypoint indices, is provided in docs/v5_appendix_D2_kimusic_blueprint_interface.md. The LLM judge prompt used in §5 is provided in docs/v5_appendix_F_llm_judge_prompt.md.
