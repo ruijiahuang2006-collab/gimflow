@@ -17,6 +17,16 @@ This repository is a sanitized public release for the EMNLP Demo submission. Pri
 
 The public code preserves the GIMFlow system implementation and the Kimusic music-generation module. The full Baseline condition requires a private local music database and is available only in the secured server deployment.
 
+## Language Note
+
+The study was conducted in Chinese: the deployed interface, dialogue
+prompts, and participant interactions were in Chinese. To support
+reproducibility, the released prompt templates (`prompts.py`) retain
+the original Chinese wording used in the study. The released example
+transcript is provided in English as a translated demonstration transcript.
+The workflow, VA planner, questionnaires, and logging are language-agnostic
+and can be run in other languages by substituting the prompt templates.
+
 ## Demo Materials
 
 - **Video walkthrough** (2:17, YouTube unlisted): https://youtu.be/xfeQDTup9pg
@@ -52,10 +62,8 @@ gimflow/
 │   ├── v5_appendix_C_questionnaire_items.md
 │   ├── v5_appendix_D_full_prompts.md
 │   ├── v5_appendix_G_split_analysis.md
-│   └── v5_section3_full_system_design.md
 ├── data/
 │   └── aggregate_analysis/
-├── figures/
 ├── demo_audio/
 ├── soundfonts/
 │   └── FluidR3_GM_LICENSE.txt
@@ -151,7 +159,6 @@ For now, please refer to the OpenReview submission page (link above) for the cur
 
 Ruijia (Rita) Huang — ruijia.huang@mail.utoronto.ca
 
-
 ## Key Repository Artifacts
 
 The following files provide the main reviewer-facing artifacts referenced by the paper:
@@ -162,9 +169,3 @@ The following files provide the main reviewer-facing artifacts referenced by the
 - Synthetic example session JSON: data/example_session/example_session_synthetic.json
 - Aggregate Study 1/2 results: data/aggregate_analysis/
 - Demo audio sample: demo_audio/demo_session_audio.mp3
-- High-resolution figures: figures/
-
-## Language Note
-
-This public release is intended for English-language demonstration, review, and reproducibility. Some legacy Chinese UI strings from the deployed study interface are not maintained in the public release code; the paper, README, documentation, demo transcript, prompts, and reviewer-facing artifacts are provided in English.
-
