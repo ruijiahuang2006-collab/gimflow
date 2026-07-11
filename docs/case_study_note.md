@@ -1,6 +1,6 @@
 # Case Study P408J7U — Extended Details
 
-Extended details for the case study referenced in the paper (§5.5) are
+Extended details for the case study referenced in the paper (§5) are
 provided in the paper itself, in Appendix E ("Extended Case Study Details").
 Appendix E includes:
 
